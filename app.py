@@ -145,11 +145,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     margin-top: 20px;
 }
 
-.small-note {
-    color: #94A3B8 !important;
-    font-size: 14px;
-}
-
 .footer {
     text-align: center;
     color: #94A3B8 !important;
@@ -165,12 +160,10 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 st.sidebar.title("CardioRisk AI")
 st.sidebar.markdown("---")
 st.sidebar.write("**Model:** Recall-Tuned XGBoost")
-st.sidebar.write(f"**Decision Threshold:** {threshold}")
-st.sidebar.write("**Recall:** 78.09%")
-st.sidebar.write("**F1 Score:** 73.63%")
-st.sidebar.write("**ROC-AUC:** 80.02%")
+st.sidebar.write("**Application Type:** Educational ML Project")
+st.sidebar.write("**Version:** 1.0")
 st.sidebar.markdown("---")
-st.sidebar.warning("Educational project only. Not for real medical diagnosis.")
+st.sidebar.warning("This app is not a medical diagnostic tool. It is intended only for educational and research purposes.")
 
 # =========================
 # Header
@@ -179,21 +172,20 @@ st.markdown("""
 <div class="hero">
     <div class="hero-title">CardioRisk AI</div>
     <div class="hero-subtitle">
-        AI-powered cardiovascular disease risk assessment using a recall-optimized XGBoost model.
+        AI-powered cardiovascular disease risk assessment using patient health indicators and a machine learning model.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 st.info(
     "Disclaimer: This application is for educational and research purposes only. "
-    "It is not a medical diagnostic tool and should not replace professional medical advice."
+    "It should not replace professional medical advice, diagnosis, or treatment."
 )
 
-m1, m2, m3, m4 = st.columns(4)
+m1, m2, m3 = st.columns(3)
 m1.metric("Model", "XGBoost")
 m2.metric("Recall", "78.09%")
 m3.metric("ROC-AUC", "80.02%")
-m4.metric("Threshold", f"{threshold}")
 
 st.divider()
 
@@ -244,8 +236,8 @@ with left:
                 options=[1, 2, 3],
                 format_func=lambda x: {
                     1: "Normal",
-                    2: "Above Normal",
-                    3: "Well Above Normal"
+                    2: "Above Normal / Borderline High",
+                    3: "Well Above Normal / High"
                 }[x]
             )
 
@@ -255,8 +247,8 @@ with left:
                 options=[1, 2, 3],
                 format_func=lambda x: {
                     1: "Normal",
-                    2: "Above Normal",
-                    3: "Well Above Normal"
+                    2: "Above Normal / Elevated",
+                    3: "Well Above Normal / High"
                 }[x]
             )
 
@@ -328,26 +320,24 @@ with right:
     with st.container(border=True):
         st.subheader("Health Assessment")
 
-        st.write(f"**BMI Category:** {bmi_category}")
-
-        if ap_hi >= 140 or ap_lo >= 90:
-            st.warning("Elevated blood pressure detected.")
-        else:
-            st.success("Blood pressure is within the normal range.")
-
         if cholesterol == 1:
             st.success("Cholesterol: Normal")
         elif cholesterol == 2:
-            st.warning("Cholesterol: Above Normal")
+            st.warning("Cholesterol: Above Normal / Borderline High")
         else:
-            st.error("Cholesterol: Well Above Normal")
+            st.error("Cholesterol: Well Above Normal / High")
 
         if gluc == 1:
             st.success("Glucose: Normal")
         elif gluc == 2:
-            st.warning("Glucose: Above Normal")
+            st.warning("Glucose: Above Normal / Elevated")
         else:
-            st.error("Glucose: Well Above Normal")
+            st.error("Glucose: Well Above Normal / High")
+
+        if active == 1:
+            st.success("Physical Activity: Active")
+        else:
+            st.warning("Physical Activity: Inactive")
 
 # =========================
 # Prediction
@@ -360,9 +350,8 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
 
     st.markdown('<div class="section-title">Prediction Result</div>', unsafe_allow_html=True)
 
-    r1, r2, r3 = st.columns(3)
+    r1, r2 = st.columns(2)
     r1.metric("Risk Probability", f"{probability * 100:.2f}%")
-    r2.metric("Threshold Used", f"{threshold * 100:.0f}%")
 
     if probability >= 0.75:
         confidence = "High"
@@ -371,16 +360,18 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
     else:
         confidence = "Low"
 
-    r3.metric("Risk Confidence", confidence)
+    r2.metric("Risk Confidence", confidence)
 
     if prediction == 1:
-        st.markdown('<div class="result-high">High Risk of Heart Disease</div>', unsafe_allow_html=True)
+        st.markdown('<div class="result-high">High Risk of Cardiovascular Disease</div>', unsafe_allow_html=True)
+        st.warning("The entered health indicators suggest elevated cardiovascular risk. Medical consultation is recommended.")
     else:
-        st.markdown('<div class="result-low">Low Risk of Heart Disease</div>', unsafe_allow_html=True)
+        st.markdown('<div class="result-low">Low Risk of Cardiovascular Disease</div>', unsafe_allow_html=True)
+        st.success("The entered health indicators suggest lower cardiovascular risk. Continue healthy lifestyle practices and routine checkups.")
 
     st.progress(float(probability))
 
-    st.markdown('<div class="section-title">Detected Risk Factors</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Clinical Risk Factors</div>', unsafe_allow_html=True)
 
     risk_factors = []
 
@@ -414,7 +405,7 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
             for factor in risk_factors:
                 st.write(f"• {factor}")
     else:
-        st.success("No major visible risk factors detected.")
+        st.success("No major visible risk factors detected from the entered values.")
 
     st.markdown('<div class="section-title">Risk Probability Visualization</div>', unsafe_allow_html=True)
 
@@ -423,16 +414,15 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
     ax.set_facecolor("#111827")
 
     ax.barh(["Low Risk", "High Risk"], [1 - probability, probability], color=["#22C55E", "#EF4444"])
-    ax.axvline(threshold, color="#FACC15", linestyle="--", linewidth=2, label="Decision Threshold")
     ax.set_xlim(0, 1)
     ax.set_xlabel("Probability", color="white")
     ax.set_title("Predicted Risk Distribution", color="white")
     ax.tick_params(colors="white")
-    ax.legend(facecolor="#111827", edgecolor="#334155", labelcolor="white")
 
     st.pyplot(fig)
 
-    with st.expander("View Data Sent to Model"):
+    with st.expander("Prediction Details"):
+        st.write("The model input generated from the entered patient information is shown below.")
         st.dataframe(input_data)
 
 # =========================
