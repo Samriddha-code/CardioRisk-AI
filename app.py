@@ -145,6 +145,11 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     margin-top: 20px;
 }
 
+.small-note {
+    color: #94A3B8 !important;
+    font-size: 14px;
+}
+
 .footer {
     text-align: center;
     color: #94A3B8 !important;
@@ -160,10 +165,12 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 st.sidebar.title("CardioRisk AI")
 st.sidebar.markdown("---")
 st.sidebar.write("**Model:** Recall-Tuned XGBoost")
-st.sidebar.write("**Application Type:** Educational ML Project")
-st.sidebar.write("**Version:** 1.0")
+st.sidebar.write(f"**Decision Threshold:** {threshold}")
+st.sidebar.write("**Recall:** 78.09%")
+st.sidebar.write("**F1 Score:** 73.63%")
+st.sidebar.write("**ROC-AUC:** 80.02%")
 st.sidebar.markdown("---")
-st.sidebar.warning("This app is not a medical diagnostic tool. It is intended only for educational and research purposes.")
+st.sidebar.warning("Educational project only. Not for real medical diagnosis.")
 
 # =========================
 # Header
@@ -172,20 +179,21 @@ st.markdown("""
 <div class="hero">
     <div class="hero-title">CardioRisk AI</div>
     <div class="hero-subtitle">
-        AI-powered cardiovascular disease risk assessment using patient health indicators and a machine learning model.
+        AI-powered cardiovascular disease risk assessment using a recall-optimized XGBoost model.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 st.info(
     "Disclaimer: This application is for educational and research purposes only. "
-    "It should not replace professional medical advice, diagnosis, or treatment."
+    "It is not a medical diagnostic tool and should not replace professional medical advice."
 )
 
-m1, m2, m3 = st.columns(3)
+m1, m2, m3, m4 = st.columns(4)
 m1.metric("Model", "XGBoost")
 m2.metric("Recall", "78.09%")
 m3.metric("ROC-AUC", "80.02%")
+m4.metric("Threshold", f"{threshold}")
 
 st.divider()
 
@@ -205,8 +213,22 @@ with left:
         c1, c2 = st.columns(2)
 
         with c1:
-            age_years = st.number_input("Age", min_value=18.0, max_value=100.0, value=50.0, step=1.0)
-            height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=165.0, step=1.0)
+            age_years = st.number_input(
+                "Age (years) — Range: 1 to 120",
+                min_value=1,
+                max_value=120,
+                value=50,
+                step=1,
+                format="%d"
+            )
+            height = st.number_input(
+                "Height (cm) — Range: 50 to 250",
+                min_value=50,
+                max_value=250,
+                value=165,
+                step=1,
+                format="%d"
+            )
 
         with c2:
             gender = st.selectbox(
@@ -214,17 +236,38 @@ with left:
                 options=[1, 2],
                 format_func=lambda x: "Female" if x == 1 else "Male"
             )
-            weight = st.number_input("Weight (kg)", min_value=30.0, max_value=250.0, value=70.0, step=1.0)
+            weight = st.number_input(
+                "Weight (kg) — Range: 20 to 300",
+                min_value=20,
+                max_value=300,
+                value=70,
+                step=1,
+                format="%d"
+            )
 
     with st.container(border=True):
         st.subheader("Vital Signs")
         c1, c2 = st.columns(2)
 
         with c1:
-            ap_hi = st.number_input("Systolic Blood Pressure", min_value=50, max_value=250, value=120, step=1)
+            ap_hi = st.number_input(
+                "Systolic Blood Pressure (mmHg) — Range: 50 to 300",
+                min_value=50,
+                max_value=300,
+                value=120,
+                step=1,
+                format="%d"
+            )
 
         with c2:
-            ap_lo = st.number_input("Diastolic Blood Pressure", min_value=30, max_value=200, value=80, step=1)
+            ap_lo = st.number_input(
+                "Diastolic Blood Pressure (mmHg) — Range: 30 to 200",
+                min_value=30,
+                max_value=200,
+                value=80,
+                step=1,
+                format="%d"
+            )
 
     with st.container(border=True):
         st.subheader("Laboratory Values")
@@ -236,8 +279,8 @@ with left:
                 options=[1, 2, 3],
                 format_func=lambda x: {
                     1: "Normal",
-                    2: "Above Normal / Borderline High",
-                    3: "Well Above Normal / High"
+                    2: "Above Normal",
+                    3: "Well Above Normal"
                 }[x]
             )
 
@@ -247,8 +290,8 @@ with left:
                 options=[1, 2, 3],
                 format_func=lambda x: {
                     1: "Normal",
-                    2: "Above Normal / Elevated",
-                    3: "Well Above Normal / High"
+                    2: "Above Normal",
+                    3: "Well Above Normal"
                 }[x]
             )
 
@@ -271,6 +314,11 @@ with left:
 BMI = weight / ((height / 100) ** 2)
 pulse_pressure = ap_hi - ap_lo
 MAP = ap_lo + (pulse_pressure / 3)
+
+# Validate blood pressure values before prediction
+if ap_hi <= ap_lo:
+    st.error("Invalid blood pressure: Systolic BP must be greater than Diastolic BP.")
+    st.stop()
 
 input_data = pd.DataFrame([{
     "gender": gender,
@@ -320,24 +368,26 @@ with right:
     with st.container(border=True):
         st.subheader("Health Assessment")
 
+        st.write(f"**BMI Category:** {bmi_category}")
+
+        if ap_hi >= 140 or ap_lo >= 90:
+            st.warning("Elevated blood pressure detected.")
+        else:
+            st.success("Blood pressure is within the normal range.")
+
         if cholesterol == 1:
             st.success("Cholesterol: Normal")
         elif cholesterol == 2:
-            st.warning("Cholesterol: Above Normal / Borderline High")
+            st.warning("Cholesterol: Above Normal")
         else:
-            st.error("Cholesterol: Well Above Normal / High")
+            st.error("Cholesterol: Well Above Normal")
 
         if gluc == 1:
             st.success("Glucose: Normal")
         elif gluc == 2:
-            st.warning("Glucose: Above Normal / Elevated")
+            st.warning("Glucose: Above Normal")
         else:
-            st.error("Glucose: Well Above Normal / High")
-
-        if active == 1:
-            st.success("Physical Activity: Active")
-        else:
-            st.warning("Physical Activity: Inactive")
+            st.error("Glucose: Well Above Normal")
 
 # =========================
 # Prediction
@@ -350,8 +400,9 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
 
     st.markdown('<div class="section-title">Prediction Result</div>', unsafe_allow_html=True)
 
-    r1, r2 = st.columns(2)
+    r1, r2, r3 = st.columns(3)
     r1.metric("Risk Probability", f"{probability * 100:.2f}%")
+    r2.metric("Threshold Used", f"{threshold * 100:.0f}%")
 
     if probability >= 0.75:
         confidence = "High"
@@ -360,14 +411,26 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
     else:
         confidence = "Low"
 
-    r2.metric("Risk Confidence", confidence)
+    r3.metric("Risk Confidence", confidence)
 
     if prediction == 1:
-        st.markdown('<div class="result-high">High Risk of Cardiovascular Disease</div>', unsafe_allow_html=True)
-        st.warning("The entered health indicators suggest elevated cardiovascular risk. Medical consultation is recommended.")
+        st.markdown('<div class="result-high">High Risk of Heart Disease</div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="result-low">Low Risk of Cardiovascular Disease</div>', unsafe_allow_html=True)
-        st.success("The entered health indicators suggest lower cardiovascular risk. Continue healthy lifestyle practices and routine checkups.")
+        st.markdown('<div class="result-low">Low Risk of Heart Disease</div>', unsafe_allow_html=True)
+
+    # Clinical Interpretation
+    st.markdown('<div class="section-title">Clinical Interpretation</div>', unsafe_allow_html=True)
+
+    if prediction == 1:
+        st.warning(
+            "The entered health indicators suggest an elevated estimated risk of cardiovascular disease. "
+            "This result does not confirm the presence of heart disease, but further clinical evaluation by a qualified healthcare professional is recommended."
+        )
+    else:
+        st.success(
+            "The entered health indicators suggest lower cardiovascular risk. "
+            "Continue healthy lifestyle practices, regular physical activity, balanced nutrition, and routine checkups."
+        )
 
     st.progress(float(probability))
 
@@ -405,7 +468,7 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
             for factor in risk_factors:
                 st.write(f"• {factor}")
     else:
-        st.success("No major visible risk factors detected from the entered values.")
+        st.success("No major visible risk factors detected.")
 
     st.markdown('<div class="section-title">Risk Probability Visualization</div>', unsafe_allow_html=True)
 
@@ -414,15 +477,16 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
     ax.set_facecolor("#111827")
 
     ax.barh(["Low Risk", "High Risk"], [1 - probability, probability], color=["#22C55E", "#EF4444"])
+    ax.axvline(threshold, color="#FACC15", linestyle="--", linewidth=2, label="Decision Threshold")
     ax.set_xlim(0, 1)
     ax.set_xlabel("Probability", color="white")
     ax.set_title("Predicted Risk Distribution", color="white")
     ax.tick_params(colors="white")
+    ax.legend(facecolor="#111827", edgecolor="#334155", labelcolor="white")
 
     st.pyplot(fig)
 
     with st.expander("Prediction Details"):
-        st.write("The model input generated from the entered patient information is shown below.")
         st.dataframe(input_data)
 
 # =========================
