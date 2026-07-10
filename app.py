@@ -4,18 +4,8 @@ import joblib
 import matplotlib.pyplot as plt
 from xgboost import XGBClassifier
 
-# =========================
-# Page Setup
-# =========================
-st.set_page_config(
-    page_title="CardioRisk AI",
-    page_icon="🫀",
-    layout="wide"
-)
+st.set_page_config(page_title="CardioRisk AI", page_icon="🫀", layout="wide")
 
-# =========================
-# Load Model
-# =========================
 @st.cache_resource
 def load_model():
     xgb_model = XGBClassifier()
@@ -29,68 +19,54 @@ def load_threshold():
 model = load_model()
 threshold = load_threshold()
 
-# =========================
-# Dark Professional CSS
-# =========================
 st.markdown("""
 <style>
 .stApp {
     background: #0F172A;
     color: #E5E7EB;
 }
-
 .block-container {
     padding-top: 2rem;
     padding-bottom: 2rem;
     max-width: 1250px;
 }
-
 section[data-testid="stSidebar"] {
     background-color: #111827;
     border-right: 1px solid #334155;
 }
-
 h1, h2, h3, h4, h5, h6 {
     color: #F8FAFC !important;
 }
-
 p, label, span {
     color: #E5E7EB !important;
 }
-
 [data-testid="stMetric"] {
     background-color: #111827;
     border: 1px solid #334155;
     padding: 16px;
     border-radius: 14px;
 }
-
 [data-testid="stMetricLabel"] {
     color: #94A3B8 !important;
 }
-
 [data-testid="stMetricValue"] {
     color: #F8FAFC !important;
 }
-
 div[data-testid="stVerticalBlockBorderWrapper"] {
     background-color: #111827;
     border: 1px solid #334155;
     border-radius: 16px;
 }
-
 .stNumberInput input {
     background-color: #1E293B;
     color: #F8FAFC;
     border: 1px solid #334155;
 }
-
 .stSelectbox div[data-baseweb="select"] > div {
     background-color: #1E293B;
     color: #F8FAFC;
     border-color: #334155;
 }
-
 .hero {
     background: linear-gradient(135deg, #1E293B, #020617);
     padding: 36px 42px;
@@ -98,21 +74,18 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     border: 1px solid #334155;
     margin-bottom: 22px;
 }
-
 .hero-title {
     font-size: 44px;
     font-weight: 800;
     color: #F8FAFC !important;
     letter-spacing: -0.5px;
 }
-
 .hero-subtitle {
     font-size: 17px;
     color: #CBD5E1 !important;
     margin-top: 8px;
     max-width: 850px;
 }
-
 .section-title {
     font-size: 24px;
     font-weight: 700;
@@ -120,7 +93,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     margin-top: 18px;
     margin-bottom: 12px;
 }
-
 .result-high {
     border: 1px solid #EF4444;
     background-color: #450A0A;
@@ -132,7 +104,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     font-weight: 800;
     margin-top: 20px;
 }
-
 .result-low {
     border: 1px solid #22C55E;
     background-color: #052E16;
@@ -144,12 +115,45 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     font-weight: 800;
     margin-top: 20px;
 }
-
+.big-risk-card {
+    background: linear-gradient(135deg, #0B5ED7, #2563EB);
+    border: 1px solid #60A5FA;
+    border-radius: 22px;
+    padding: 26px 28px;
+    margin-top: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+}
+.big-risk-label {
+    font-size: 20px;
+    font-weight: 700;
+    color: #DBEAFE !important;
+    margin-bottom: 8px;
+}
+.big-risk-value {
+    font-size: 48px;
+    font-weight: 900;
+    color: #FFFFFF !important;
+    line-height: 1.1;
+}
+.big-risk-subtext {
+    font-size: 15px;
+    color: #DBEAFE !important;
+    margin-top: 10px;
+}
+div[data-testid="stProgressBar"] > div > div > div > div {
+    background-color: #3B82F6;
+    height: 18px;
+    border-radius: 999px;
+}
+div[data-testid="stProgressBar"] {
+    margin-top: 8px;
+    margin-bottom: 22px;
+}
 .small-note {
     color: #94A3B8 !important;
     font-size: 14px;
 }
-
 .footer {
     text-align: center;
     color: #94A3B8 !important;
@@ -159,9 +163,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 </style>
 """, unsafe_allow_html=True)
 
-# =========================
-# Sidebar
-# =========================
 st.sidebar.title("CardioRisk AI")
 st.sidebar.markdown("---")
 st.sidebar.write("**Model:** Recall-Tuned XGBoost")
@@ -172,9 +173,6 @@ st.sidebar.write("**ROC-AUC:** 80.02%")
 st.sidebar.markdown("---")
 st.sidebar.warning("Educational project only. Not for real medical diagnosis.")
 
-# =========================
-# Header
-# =========================
 st.markdown("""
 <div class="hero">
     <div class="hero-title">CardioRisk AI</div>
@@ -196,126 +194,59 @@ m3.metric("ROC-AUC", "80.02%")
 m4.metric("Threshold", f"{threshold}")
 
 st.divider()
-
-# =========================
-# Main Layout
-# =========================
 left, right = st.columns([1.2, 0.8])
 
-# =========================
-# Inputs
-# =========================
 with left:
     st.markdown('<div class="section-title">Patient Information</div>', unsafe_allow_html=True)
 
     with st.container(border=True):
         st.subheader("Basic Details")
         c1, c2 = st.columns(2)
-
         with c1:
-            age_years = st.number_input(
-                "Age (years) — Range: 1 to 120",
-                min_value=1,
-                max_value=120,
-                value=50,
-                step=1,
-                format="%d"
-            )
-            height = st.number_input(
-                "Height (cm) — Range: 50 to 250",
-                min_value=50,
-                max_value=250,
-                value=165,
-                step=1,
-                format="%d"
-            )
-
+            age_years = st.number_input("Age (years) [Accepted: 1-120]", min_value=1, max_value=120, value=50, step=1, format="%d")
+            height = st.number_input("Height (cm) [Accepted: 50-250]", min_value=50, max_value=250, value=165, step=1, format="%d")
         with c2:
-            gender = st.selectbox(
-                "Gender",
-                options=[1, 2],
-                format_func=lambda x: "Female" if x == 1 else "Male"
-            )
-            weight = st.number_input(
-                "Weight (kg) — Range: 20 to 300",
-                min_value=20,
-                max_value=300,
-                value=70,
-                step=1,
-                format="%d"
-            )
+            gender = st.selectbox("Gender", options=[1, 2], format_func=lambda x: "Female" if x == 1 else "Male")
+            weight = st.number_input("Weight (kg) [Accepted: 20-300]", min_value=20, max_value=300, value=70, step=1, format="%d")
 
     with st.container(border=True):
         st.subheader("Vital Signs")
         c1, c2 = st.columns(2)
-
         with c1:
-            ap_hi = st.number_input(
-                "Systolic Blood Pressure (mmHg) — Range: 50 to 300",
-                min_value=50,
-                max_value=300,
-                value=120,
-                step=1,
-                format="%d"
-            )
-
+            ap_hi = st.number_input("Systolic Blood Pressure (mmHg) [Accepted: 50-300]", min_value=50, max_value=300, value=120, step=1, format="%d")
         with c2:
-            ap_lo = st.number_input(
-                "Diastolic Blood Pressure (mmHg) — Range: 30 to 200",
-                min_value=30,
-                max_value=200,
-                value=80,
-                step=1,
-                format="%d"
-            )
+            ap_lo = st.number_input("Diastolic Blood Pressure (mmHg) [Accepted: 30-200]", min_value=30, max_value=200, value=80, step=1, format="%d")
 
     with st.container(border=True):
         st.subheader("Laboratory Values")
         c1, c2 = st.columns(2)
-
         with c1:
             cholesterol = st.selectbox(
-                "Cholesterol Level",
+                "Cholesterol Level [1: Normal, 2: Above Normal, 3: Well Above Normal]",
                 options=[1, 2, 3],
-                format_func=lambda x: {
-                    1: "Normal",
-                    2: "Above Normal",
-                    3: "Well Above Normal"
-                }[x]
+                format_func=lambda x: {1: "Normal", 2: "Above Normal", 3: "Well Above Normal"}[x]
             )
-
         with c2:
             gluc = st.selectbox(
-                "Glucose Level",
+                "Glucose Level [1: Normal, 2: Above Normal, 3: Well Above Normal]",
                 options=[1, 2, 3],
-                format_func=lambda x: {
-                    1: "Normal",
-                    2: "Above Normal",
-                    3: "Well Above Normal"
-                }[x]
+                format_func=lambda x: {1: "Normal", 2: "Above Normal", 3: "Well Above Normal"}[x]
             )
 
     with st.container(border=True):
         st.subheader("Lifestyle")
         c1, c2, c3 = st.columns(3)
-
         with c1:
             smoke = 1 if st.toggle("Smoking") else 0
-
         with c2:
             alco = 1 if st.toggle("Alcohol Consumption") else 0
-
         with c3:
             active = 1 if st.toggle("Physically Active", value=True) else 0
 
-# =========================
-# Feature Engineering
-# =========================
 BMI = weight / ((height / 100) ** 2)
 pulse_pressure = ap_hi - ap_lo
 MAP = ap_lo + (pulse_pressure / 3)
 
-# Validate blood pressure values before prediction
 if ap_hi <= ap_lo:
     st.error("Invalid blood pressure: Systolic BP must be greater than Diastolic BP.")
     st.stop()
@@ -337,9 +268,6 @@ input_data = pd.DataFrame([{
     "MAP": MAP
 }])
 
-# =========================
-# Health Summary
-# =========================
 with right:
     st.markdown('<div class="section-title">Health Summary</div>', unsafe_allow_html=True)
 
@@ -367,7 +295,6 @@ with right:
 
     with st.container(border=True):
         st.subheader("Health Assessment")
-
         st.write(f"**BMI Category:** {bmi_category}")
 
         if ap_hi >= 140 or ap_lo >= 90:
@@ -389,9 +316,6 @@ with right:
         else:
             st.error("Glucose: Well Above Normal")
 
-# =========================
-# Prediction
-# =========================
 st.divider()
 
 if st.button("Predict Cardiovascular Risk", use_container_width=True):
@@ -418,7 +342,6 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
     else:
         st.markdown('<div class="result-low">Low Risk of Heart Disease</div>', unsafe_allow_html=True)
 
-    # Clinical Interpretation
     st.markdown('<div class="section-title">Clinical Interpretation</div>', unsafe_allow_html=True)
 
     if prediction == 1:
@@ -432,12 +355,20 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
             "Continue healthy lifestyle practices, regular physical activity, balanced nutrition, and routine checkups."
         )
 
+    st.markdown(
+    f"""
+    <div class="big-risk-card">
+        <div class="big-risk-label">Heart Disease Risk</div>
+        <div class="big-risk-value">{probability * 100:.2f}%</div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
     st.progress(float(probability))
 
     st.markdown('<div class="section-title">Clinical Risk Factors</div>', unsafe_allow_html=True)
 
     risk_factors = []
-
     if ap_hi >= 140:
         risk_factors.append("High systolic blood pressure")
     if ap_lo >= 90:
@@ -475,7 +406,6 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
     fig, ax = plt.subplots(figsize=(7, 3))
     fig.patch.set_facecolor("#0F172A")
     ax.set_facecolor("#111827")
-
     ax.barh(["Low Risk", "High Risk"], [1 - probability, probability], color=["#22C55E", "#EF4444"])
     ax.axvline(threshold, color="#FACC15", linestyle="--", linewidth=2, label="Decision Threshold")
     ax.set_xlim(0, 1)
@@ -483,15 +413,11 @@ if st.button("Predict Cardiovascular Risk", use_container_width=True):
     ax.set_title("Predicted Risk Distribution", color="white")
     ax.tick_params(colors="white")
     ax.legend(facecolor="#111827", edgecolor="#334155", labelcolor="white")
-
     st.pyplot(fig)
 
     with st.expander("Prediction Details"):
         st.dataframe(input_data)
 
-# =========================
-# Footer
-# =========================
 st.markdown("""
 <div class="footer">
     Built with Python, Streamlit, XGBoost and Scikit-Learn.
